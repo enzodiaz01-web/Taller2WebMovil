@@ -1,4 +1,5 @@
 import { Injectable, signal } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import { environment } from '../../environments/environment';
 
 const API_URL_KEY = 'gamelock_api_url';
@@ -11,6 +12,10 @@ function getInitialApiUrl(): string {
     }
   } catch {
     // localStorage unavailable
+  }
+  // En emulador Android o nativo, localhost es el propio teléfono; 10.0.2.2 apunta a la PC host
+  if (Capacitor.isNativePlatform()) {
+    return 'http://10.0.2.2:8000/api';
   }
   return environment.apiUrl;
 }

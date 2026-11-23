@@ -15,6 +15,17 @@ from app.routers.users import router as users_router
 app = FastAPI(title="Taller 2 Web Movil API")
 
 cors_origins = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
+# Mobile, Capacitor and local dev origins
+for o in [
+    "http://localhost",
+    "https://localhost",
+    "capacitor://localhost",
+    "http://127.0.0.1",
+    "http://10.0.2.2",
+    "http://10.0.2.2:8000",
+]:
+    if o not in cors_origins:
+        cors_origins.append(o)
 
 app.add_middleware(
     CORSMiddleware,
