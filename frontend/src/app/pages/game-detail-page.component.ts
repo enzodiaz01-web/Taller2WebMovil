@@ -32,6 +32,7 @@ import {
   ReviewFormDialogComponent,
   ReviewFormDialogResult,
 } from '../components/review-form-dialog/review-form-dialog.component';
+import { QrShareDialogComponent } from '../components/qr-share-dialog/qr-share-dialog.component';
 import {
   ConfirmDialogComponent,
   ConfirmDialogData,
@@ -135,6 +136,16 @@ import {
                   [current]="g.my_status"
                   (changed)="onStatusChanged()"
                 ></app-status-select>
+                <button
+                  mat-stroked-button
+                  type="button"
+                  class="share-qr-btn"
+                  (click)="openShareQr()"
+                  aria-label="Compartir juego por código QR"
+                >
+                  <mat-icon>qr_code_2</mat-icon>
+                  <span>Compartir QR</span>
+                </button>
               </div>
             </div>
           </div>
@@ -673,6 +684,19 @@ export class GameDetailPageComponent {
     () => this.pageSize()
   );
   readonly reviewsPage = computed(() => this.reviewsResource.value() ?? null);
+
+  openShareQr(): void {
+    const g = this.game();
+    if (!g) return;
+    this.dialog.open(QrShareDialogComponent, {
+      data: {
+        title: g.title,
+        subtitle: 'Escanea para abrir este juego en Gamelock',
+        payload: `gamelock:game:${g.id}`,
+      },
+      width: '340px',
+    });
+  }
 
   readonly releaseYear = computed(() => {
     const d = this.game()?.release_date;

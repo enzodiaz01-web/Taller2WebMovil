@@ -72,7 +72,6 @@ def get_home_data(db: Annotated[Session, Depends(get_db)]) -> HomeOut:
     top_rated_data = _get_top_rated_list(db)
     recent_reviews_data = _get_recent_reviews(db)
 
-    # Collect all game IDs across all 6 sections for ONE batched build_game_cards call
     all_game_ids: set[int] = set()
     for g_id, _ in wishlisted_data:
         all_game_ids.add(g_id)
@@ -108,6 +107,9 @@ def get_home_data(db: Annotated[Session, Depends(get_db)]) -> HomeOut:
             game_id=rev.game_id,
             score=rev.score,
             body=rev.body,
+            latitude=rev.latitude,
+            longitude=rev.longitude,
+            location_label=rev.location_label,
             created_at=rev.created_at,
             updated_at=rev.updated_at,
             author=Author(id=rev.user_id, username=username),

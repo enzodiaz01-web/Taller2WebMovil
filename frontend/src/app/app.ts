@@ -9,10 +9,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatListModule } from '@angular/material/list';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormsModule } from '@angular/forms';
 import { SITE_NAME } from './site.config';
 import { AuthStore } from './services/auth.store';
 import { AuthService } from './services/auth.service';
+import { MobileService } from './services/mobile.service';
+import { ServerConfigDialogComponent } from './components/server-config-dialog/server-config-dialog.component';
 
 @Component({
   selector: 'app-root',
@@ -35,7 +39,10 @@ export class App {
   readonly siteName = SITE_NAME;
   readonly authStore = inject(AuthStore);
   readonly authService = inject(AuthService);
+  readonly mobileService = inject(MobileService);
   readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
   private readonly breakpointObserver = inject(BreakpointObserver);
 
   readonly isMobile = toSignal(
@@ -81,6 +88,43 @@ export class App {
         drawer.close();
       }
     }
+  }
+
+  async openQrScanner(drawer?: { close: () => void }): Promise<void> {
+    if (drawer) {
+      drawer.close();
+    }
+    const result = await this.mobileService.scanAndResolve();
+    if (result.cancelled) {
+      return;
+    }
+    if (!result.ok || !result.data) {
+      this.snackBar.open(result.error || 'Error al escanear código', 'Cerrar', {
+        duration: 4500,
+      });
+      return;
+    }
+
+    const scan = result.data;
+    this.snackBar.open(scan.message, 'OK', { duration: 3500 });
+
+    if (scan.kind === 'search' && scan.query) {
+      this.router.navigate(['/games'], { queryParams: { q: scan.query } });
+    } else if (scan.route) {
+      this.router.navigateByUrl(scan.route);
+    }
+  }
+
+  openServerConfig(drawer?: { close: () => void }): void {
+    if (drawer) {
+      drawer.close();
+    }
+    const ref = this.dialog.open(ServerConfigDialogComponent);
+    ref.afterClosed().subscribe((saved) => {
+      if (saved) {
+        this.snackBar.open('URL del servidor actualizada', 'OK', { duration: 3000 });
+      }
+    });
   }
 
   logout(): void {

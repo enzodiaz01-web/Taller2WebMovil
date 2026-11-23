@@ -1,15 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
 import { Page, ReviewIn, ReviewOut, ReviewWithGame } from '../models';
+import { ApiConfigService } from './api-config.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ReviewsService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = environment.apiUrl;
+  private readonly apiConfig = inject(ApiConfigService);
 
   forGame(
     gameIdFn: () => number | string | null | undefined,
@@ -30,7 +30,7 @@ export class ReviewsService {
       searchParams.set('page', String(page));
       searchParams.set('page_size', String(pageSize));
 
-      return `${this.baseUrl}/games/${id}/reviews?${searchParams.toString()}`;
+      return `${this.apiConfig.apiUrl()}/games/${id}/reviews?${searchParams.toString()}`;
     });
   }
 
@@ -38,23 +38,23 @@ export class ReviewsService {
     return httpResource<ReviewWithGame>(() => {
       const id = idFn();
       if (!id) return undefined;
-      return `${this.baseUrl}/reviews/${id}`;
+      return `${this.apiConfig.apiUrl()}/reviews/${id}`;
     });
   }
 
   getOne(id: number): Observable<ReviewWithGame> {
-    return this.http.get<ReviewWithGame>(`${this.baseUrl}/reviews/${id}`);
+    return this.http.get<ReviewWithGame>(`${this.apiConfig.apiUrl()}/reviews/${id}`);
   }
 
   create(gameId: number, body: ReviewIn): Observable<ReviewOut> {
-    return this.http.post<ReviewOut>(`${this.baseUrl}/games/${gameId}/reviews`, body);
+    return this.http.post<ReviewOut>(`${this.apiConfig.apiUrl()}/games/${gameId}/reviews`, body);
   }
 
   update(id: number, body: ReviewIn): Observable<ReviewOut> {
-    return this.http.put<ReviewOut>(`${this.baseUrl}/reviews/${id}`, body);
+    return this.http.put<ReviewOut>(`${this.apiConfig.apiUrl()}/reviews/${id}`, body);
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/reviews/${id}`);
+    return this.http.delete<void>(`${this.apiConfig.apiUrl()}/reviews/${id}`);
   }
 }

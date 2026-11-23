@@ -1,5 +1,7 @@
 import {
   Component,
+  OnDestroy,
+  OnInit,
   computed,
   inject,
   input,
@@ -9,14 +11,19 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { UsersService } from '../services/users.service';
 import { AuthStore } from '../services/auth.store';
+import { MobileService } from '../services/mobile.service';
 import { GameCardComponent } from '../components/game-card.component';
 import { ReviewCardComponent } from '../components/review-card/review-card.component';
 import { StateViewComponent } from '../components/state-view.component';
 import { PagerComponent } from '../components/pager.component';
+import { QrShareDialogComponent } from '../components/qr-share-dialog/qr-share-dialog.component';
+import { ShakePickDialogComponent } from '../components/shake-pick-dialog/shake-pick-dialog.component';
 
 @Component({
   selector: 'app-profile-page',
@@ -65,7 +72,47 @@ import { PagerComponent } from '../components/pager.component';
               </span>
             </div>
           </div>
+
+          <button
+            mat-stroked-button
+            type="button"
+            class="profile-qr-btn"
+            (click)="openProfileQr()"
+            aria-label="Compartir perfil por código QR"
+          >
+            <mat-icon>qr_code_2</mat-icon>
+            <span>QR</span>
+          </button>
         </header>
+
+        <!-- Shake-to-Pick Accelerometer Strip -->
+        <section class="shake-banner" aria-label="Recomendador por acelerómetro">
+          <div class="shake-banner-text">
+            <mat-icon class="shake-icon">vibration</mat-icon>
+            <div>
+              <strong>¿No sabes qué jugar hoy?</strong>
+              <p class="shake-sub">
+                @if (mobileService.sensorError()) {
+                  {{ mobileService.sensorError() }}
+                } @else if (mobileService.shakeActive()) {
+                  Agita tu teléfono (acelerómetro activo) para elegir un juego al azar.
+                } @else {
+                  Toca el botón o agita tu dispositivo para elegir tu próximo juego.
+                }
+              </p>
+            </div>
+          </div>
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            [disabled]="pickingGame()"
+            (click)="triggerShakePick(18)"
+          >
+            <mat-icon>casino</mat-icon>
+            <span>{{ pickingGame() ? 'Eligiendo...' : 'Elegir al azar' }}</span>
+          </button>
+        </section>
 
         <!-- Navigation Tabs -->
         <nav class="profile-tabs-bar" role="tablist" aria-label="User profile sections">
@@ -352,15 +399,103 @@ import { PagerComponent } from '../components/pager.component';
         grid-template-columns: repeat(2, 1fr);
       }
     }
+    .profile-qr-btn {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .shake-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, rgba(124, 92, 255, 0.14), rgba(242, 193, 78, 0.08));
+      border: 1px solid rgba(124, 92, 255, 0.35);
+    }
+    .shake-banner-text {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 220px;
+    }
+    .shake-icon {
+      color: var(--accent);
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+    .shake-sub {
+      margin: 2px 0 0;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
   `],
 })
-export class ProfilePageComponent {
+export class ProfilePageComponent implements OnInit, OnDestroy {
   readonly username = input<string>();
 
   private readonly usersService = inject(UsersService);
   private readonly authStore = inject(AuthStore);
+  readonly mobileService = inject(MobileService);
+  private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+
+  readonly pickingGame = signal(false);
+
+  ngOnInit(): void {
+    void this.mobileService.startShakeDetection((magnitude) => {
+      void this.triggerShakePick(magnitude);
+    });
+  }
+
+  ngOnDestroy(): void {
+    void this.mobileService.stopShakeDetection();
+  }
+
+  openProfileQr(): void {
+    const u = this.user();
+    if (!u) return;
+    this.dialog.open(QrShareDialogComponent, {
+      data: {
+        title: `@${u.username}`,
+        subtitle: 'Escanea para ver este perfil en Gamelock',
+        payload: `gamelock:user:${u.username}`,
+      },
+      width: '340px',
+    });
+  }
+
+  async triggerShakePick(magnitude: number): Promise<void> {
+    if (this.pickingGame()) return;
+    this.pickingGame.set(true);
+    const res = await this.mobileService.pickGameByShake(magnitude, 'auto');
+    this.pickingGame.set(false);
+
+    if (!res.ok || !res.data) {
+      this.snackBar.open(res.error || 'No se pudo elegir un juego.', 'Cerrar', {
+        duration: 3500,
+      });
+      return;
+    }
+
+    const ref = this.dialog.open(ShakePickDialogComponent, {
+      data: res.data,
+      width: '340px',
+    });
+    ref.afterClosed().subscribe((action) => {
+      if (action === 'retry') {
+        void this.triggerShakePick(magnitude);
+      }
+    });
+  }
 
   readonly pageSize = signal<number>(20);
   private readonly queryParams = toSignal(this.route.queryParamMap);

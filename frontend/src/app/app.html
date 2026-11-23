@@ -27,6 +27,14 @@
         <mat-icon matListItemIcon>favorite</mat-icon>
         <span matListItemTitle>My Library</span>
       </a>
+      <button mat-list-item (click)="openQrScanner(drawer)">
+        <mat-icon matListItemIcon>qr_code_scanner</mat-icon>
+        <span matListItemTitle>Escanear QR / Código</span>
+      </button>
+      <button mat-list-item (click)="openServerConfig(drawer)">
+        <mat-icon matListItemIcon>dns</mat-icon>
+        <span matListItemTitle>Servidor API</span>
+      </button>
 
       <div class="drawer-divider"></div>
 
@@ -87,6 +95,16 @@
           />
         </form>
 
+        <button
+          mat-icon-button
+          class="icon-action"
+          (click)="openQrScanner()"
+          aria-label="Escanear QR o código de barras"
+          title="Escanear QR / Código"
+        >
+          <mat-icon>qr_code_scanner</mat-icon>
+        </button>
+
         <a
           mat-icon-button
           routerLink="/library"
@@ -112,6 +130,10 @@
               <mat-icon>favorite</mat-icon>
               <span>My library</span>
             </a>
+            <button mat-menu-item (click)="openServerConfig()">
+              <mat-icon>dns</mat-icon>
+              <span>Servidor API</span>
+            </button>
             <button mat-menu-item (click)="logout()">
               <mat-icon>logout</mat-icon>
               <span>Logout</span>
@@ -125,6 +147,14 @@
         }
       } @else {
         <span class="toolbar-spacer"></span>
+        <button
+          mat-icon-button
+          class="icon-action"
+          (click)="openQrScanner()"
+          aria-label="Escanear QR o código de barras"
+        >
+          <mat-icon>qr_code_scanner</mat-icon>
+        </button>
         <a
           mat-icon-button
           routerLink="/library"

@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { httpResource } from '@angular/common/http';
-import { environment } from '../../environments/environment';
 import { GameCard, GameDetail, Genre, Page } from '../models';
+import { ApiConfigService } from './api-config.service';
 
 export interface GameListParams {
   q?: string | null;
@@ -15,17 +15,17 @@ export interface GameListParams {
   providedIn: 'root',
 })
 export class GamesService {
-  private readonly baseUrl = environment.apiUrl;
+  private readonly apiConfig = inject(ApiConfigService);
 
   genres() {
-    return httpResource<Genre[]>(() => `${this.baseUrl}/genres`);
+    return httpResource<Genre[]>(() => `${this.apiConfig.apiUrl()}/genres`);
   }
 
   detail(idFn: () => number | string | null | undefined) {
     return httpResource<GameDetail>(() => {
       const id = idFn();
       if (!id) return undefined;
-      return `${this.baseUrl}/games/${id}`;
+      return `${this.apiConfig.apiUrl()}/games/${id}`;
     });
   }
 
@@ -51,7 +51,7 @@ export class GamesService {
       }
 
       const qs = searchParams.toString();
-      return `${this.baseUrl}/games${qs ? '?' + qs : ''}`;
+      return `${this.apiConfig.apiUrl()}/games${qs ? '?' + qs : ''}`;
     });
   }
 }

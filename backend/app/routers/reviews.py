@@ -83,6 +83,9 @@ def list_game_reviews(
             game_id=review.game_id,
             score=review.score,
             body=review.body,
+            latitude=review.latitude,
+            longitude=review.longitude,
+            location_label=review.location_label,
             created_at=review.created_at,
             updated_at=review.updated_at,
             author=Author(id=review.user_id, username=username),
@@ -130,6 +133,9 @@ def create_game_review(
         game_id=id,
         score=payload.score,
         body=payload.body,
+        latitude=payload.latitude,
+        longitude=payload.longitude,
+        location_label=payload.location_label,
     )
     db.add(review)
     try:
@@ -147,6 +153,9 @@ def create_game_review(
         game_id=review.game_id,
         score=review.score,
         body=review.body,
+        latitude=review.latitude,
+        longitude=review.longitude,
+        location_label=review.location_label,
         created_at=review.created_at,
         updated_at=review.updated_at,
         author=Author(id=current_user.id, username=current_user.username),
@@ -188,6 +197,9 @@ def get_review_detail(
         game_id=review.game_id,
         score=review.score,
         body=review.body,
+        latitude=review.latitude,
+        longitude=review.longitude,
+        location_label=review.location_label,
         created_at=review.created_at,
         updated_at=review.updated_at,
         author=Author(id=review.user_id, username=username),
@@ -218,6 +230,9 @@ def update_review(
 
     review.score = payload.score
     review.body = payload.body
+    review.latitude = payload.latitude
+    review.longitude = payload.longitude
+    review.location_label = payload.location_label
     review.updated_at = func.now()
     db.commit()
     db.refresh(review)
@@ -231,6 +246,9 @@ def update_review(
         game_id=review.game_id,
         score=review.score,
         body=review.body,
+        latitude=review.latitude,
+        longitude=review.longitude,
+        location_label=review.location_label,
         created_at=review.created_at,
         updated_at=review.updated_at,
         author=Author(id=current_user.id, username=current_user.username),
@@ -302,6 +320,9 @@ def get_user_reviews(
             game_id=review.game_id,
             score=review.score,
             body=review.body,
+            latitude=review.latitude,
+            longitude=review.longitude,
+            location_label=review.location_label,
             created_at=review.created_at,
             updated_at=review.updated_at,
             author=Author(id=user.id, username=user.username),

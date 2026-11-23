@@ -25,6 +25,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { ReviewsService } from '../../services/reviews.service';
+import { MobileService } from '../../services/mobile.service';
 import { ReviewIn } from '../../models';
 import {
   ConfirmDialogComponent,
@@ -115,6 +116,56 @@ export interface ReviewFormDialogResult {
                 <mat-error>Review must not exceed 5000 characters</mat-error>
               }
             </mat-form-field>
+
+            <!-- GPS Location Check-in -->
+            <div class="location-section">
+              <div class="location-header">
+                <span class="section-label">Ubicación GPS (Check-in opcional)</span>
+                @if (latitude() === null) {
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    class="gps-btn"
+                    [disabled]="saving() || locating()"
+                    (click)="attachLocation()"
+                  >
+                    <mat-icon>{{ locating() ? 'gps_not_fixed' : 'my_location' }}</mat-icon>
+                    <span>{{ locating() ? 'Obteniendo GPS...' : 'Adjuntar ubicación' }}</span>
+                  </button>
+                } @else {
+                  <button
+                    mat-button
+                    type="button"
+                    class="clear-gps-btn"
+                    [disabled]="saving()"
+                    (click)="clearLocation()"
+                  >
+                    <mat-icon>close</mat-icon>
+                    <span>Quitar</span>
+                  </button>
+                }
+              </div>
+
+              @if (locationError()) {
+                <div class="gps-error" role="alert">
+                  <mat-icon>location_off</mat-icon>
+                  <span>{{ locationError() }}</span>
+                </div>
+              }
+
+              @if (latitude() !== null && longitude() !== null) {
+                <div class="gps-attached">
+                  <div class="gps-coords">
+                    <mat-icon>location_on</mat-icon>
+                    <span>{{ latitude() | number: '1.4-4' }}, {{ longitude() | number: '1.4-4' }}</span>
+                  </div>
+                  <mat-form-field appearance="outline" class="label-field">
+                    <mat-label>Etiqueta del lugar (ej. Casa, UCN, Café)</mat-label>
+                    <input matInput [formControl]="form.controls.locationLabel" maxlength="200" />
+                  </mat-form-field>
+                </div>
+              }
+            </div>
           </form>
         </mat-dialog-content>
 
@@ -216,7 +267,7 @@ export interface ReviewFormDialogResult {
     .review-form {
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 18px;
     }
     .score-section {
       display: flex;
@@ -275,11 +326,69 @@ export interface ReviewFormDialogResult {
       font-size: 12px;
       margin-top: 4px;
     }
-    .body-field {
+    .body-field,
+    .label-field {
       width: 100%;
     }
     .hint-overflow {
       color: var(--danger) !important;
+    }
+    .location-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px;
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+    }
+    .location-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .gps-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .clear-gps-btn {
+      color: var(--text-muted) !important;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .gps-attached {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .gps-coords {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .gps-coords mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+    .gps-error {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--danger);
+    }
+    .gps-error mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
     }
     .dialog-actions {
       padding: 16px 24px 20px !important;
@@ -316,13 +425,18 @@ export class ReviewFormDialogComponent implements OnInit {
   readonly dialogRef = inject(MatDialogRef<ReviewFormDialogComponent>);
   readonly data = inject<ReviewFormDialogData>(MAT_DIALOG_DATA);
   private readonly reviewsService = inject(ReviewsService);
+  private readonly mobileService = inject(MobileService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
 
   readonly scoreOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   readonly saving = signal(false);
   readonly loadingReview = signal(false);
+  readonly locating = signal(false);
   readonly serverError = signal<string | null>(null);
+  readonly locationError = signal<string | null>(null);
+  readonly latitude = signal<number | null>(null);
+  readonly longitude = signal<number | null>(null);
 
   readonly isEditMode = computed(() => Boolean(this.data.reviewId));
 
@@ -335,6 +449,10 @@ export class ReviewFormDialogComponent implements OnInit {
       nonNullable: true,
       validators: [Validators.maxLength(5000)],
     }),
+    locationLabel: new FormControl<string>('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(200)],
+    }),
   });
 
   ngOnInit(): void {
@@ -345,7 +463,10 @@ export class ReviewFormDialogComponent implements OnInit {
           this.form.patchValue({
             score: review.score,
             body: review.body || '',
+            locationLabel: review.location_label || '',
           });
+          this.latitude.set(review.latitude ?? null);
+          this.longitude.set(review.longitude ?? null);
           this.loadingReview.set(false);
         },
         error: (err) => {
@@ -362,6 +483,32 @@ export class ReviewFormDialogComponent implements OnInit {
     this.form.controls.score.markAsTouched();
   }
 
+  async attachLocation(): Promise<void> {
+    this.locating.set(true);
+    this.locationError.set(null);
+
+    const res = await this.mobileService.getCurrentLocation();
+    this.locating.set(false);
+
+    if (!res.ok || !res.data) {
+      this.locationError.set(res.error || 'No se pudo obtener la ubicación GPS.');
+      return;
+    }
+
+    this.latitude.set(res.data.latitude);
+    this.longitude.set(res.data.longitude);
+    if (!this.form.controls.locationLabel.value.trim()) {
+      this.form.controls.locationLabel.setValue(res.data.label);
+    }
+  }
+
+  clearLocation(): void {
+    this.latitude.set(null);
+    this.longitude.set(null);
+    this.form.controls.locationLabel.setValue('');
+    this.locationError.set(null);
+  }
+
   onSubmit(): void {
     if (this.form.invalid || this.saving() || this.loadingReview()) {
       return;
@@ -374,6 +521,12 @@ export class ReviewFormDialogComponent implements OnInit {
       score: this.form.controls.score.value!,
       body: this.form.controls.body.value?.trim() || null,
     };
+
+    if (this.latitude() !== null && this.longitude() !== null) {
+      payload.latitude = this.latitude();
+      payload.longitude = this.longitude();
+      payload.location_label = this.form.controls.locationLabel.value?.trim() || null;
+    }
 
     if (this.data.reviewId) {
       this.reviewsService.update(this.data.reviewId, payload).subscribe({

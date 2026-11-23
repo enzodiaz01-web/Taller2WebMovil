@@ -192,6 +192,63 @@ Todas las rutas comienzan con `/api`. Las rutas marcadas con (login) necesitan e
 - Reseñas: `GET /games/{id}/reviews`, `POST /games/{id}/reviews` (login), `GET /reviews/{id}`, `PUT /reviews/{id}` (login), `DELETE /reviews/{id}` (login), `GET /users/{username}/reviews`
 - Comentarios: `GET /reviews/{id}/comments`, `POST /reviews/{id}/comments` (login), `DELETE /comments/{id}` (login)
 - Inicio: `GET /home`
+- Móvil (Capacitor): `POST /mobile/scans`, `POST /mobile/shake-pick`, `GET /mobile/activity` (login)
+
+## Aplicación Móvil Android (Capacitor)
+
+Gamelock integra **Capacitor** (`com.gamelock.app`) para ejecutarse como una aplicación nativa instalable en Android, aprovechando capacidades del dispositivo integradas al flujo principal:
+
+- **Cámara y lectura de QR / Códigos de barras (`@capacitor/barcode-scanner`):**
+  - En cada ficha de juego (`/games/:id`) y perfil (`/u/:username`) se puede generar un código **QR** para compartir.
+  - Desde la barra superior o el menú móvil se abre el escáner con cámara para leer códigos QR de Gamelock o códigos de barras (EAN/UPC). Cada escaneo se registra y resuelve contra el backend (`POST /api/mobile/scans`).
+- **Geolocalización / GPS (`@capacitor/geolocation`):**
+  - Al escribir o editar una reseña se puede adjuntar la ubicación actual del dispositivo (*Check-in GPS*), persistida en PostgreSQL (`latitude`, `longitude`, `location_label`) y visible en las tarjetas y detalle de reseña.
+- **Sensor de movimiento — Acelerómetro (`@capacitor/motion` + `@capacitor/haptics`):**
+  - En el Perfil / Wishlist, al **agitar el dispositivo**, el acelerómetro detecta la sacudida, emite vibración háptica y consulta al backend (`POST /api/mobile/shake-pick`) para recomendar aleatoriamente el próximo juego a jugar.
+- **Permisos y manejo de errores:**
+  - La aplicación solicita permisos de cámara y ubicación cuando corresponde, maneja rechazos y falta de sensores en escritorio sin bloqueos, y entrega retroalimentación visual al usuario.
+
+### Construir y sincronizar el proyecto Android localmente
+
+Requisitos adicionales para compilación local: **Java JDK 21** y **Android SDK / Android Studio**.
+
+```powershell
+cd frontend
+npm install
+npm run build
+npx cap sync android
+```
+
+Para generar el archivo APK en modo debug desde terminal:
+
+```powershell
+cd frontend/android
+.\gradlew.bat assembleDebug
+```
+
+El APK generado quedará en:
+`frontend/android/app/build/outputs/apk/debug/app-debug.apk`
+
+### Conectar un dispositivo Android real al Backend local
+
+1. Inicia el backend escuchando en toda la red local:
+   ```powershell
+   cd backend
+   .venv\Scripts\Activate.ps1
+   uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+   ```
+2. Asegúrate de que tu teléfono Android y tu PC estén en la misma red Wi-Fi (o usa un túnel HTTPS como ngrok/cloudflared).
+3. En la app de **Gamelock** en tu teléfono, abre el menú lateral → **Servidor API** e ingresa `http://<IP-LOCAL-DE-TU-PC>:8000/api` (por ejemplo `http://192.168.1.50:8000/api`).
+
+### Construcción automatizada con GitHub Actions (CI/CD)
+
+El repositorio incluye el workflow [`.github/workflows/android-build.yml`](.github/workflows/android-build.yml), que se ejecuta automáticamente ante cada `push` a `main` (o manualmente desde la pestaña **Actions**):
+
+1. Descarga el código fuente y configura Node.js 22, Java JDK 21 y Android SDK.
+2. Instala dependencias (`npm ci`) y genera el build de producción de Angular (`npm run build`).
+3. Sincroniza Capacitor con Android (`npx cap sync android`).
+4. Compila el proyecto con Gradle (`./gradlew assembleDebug`).
+5. Publica el archivo instalable como artefacto descargable llamado **`gamelock-debug-apk`**.
 
 ## Notas
 

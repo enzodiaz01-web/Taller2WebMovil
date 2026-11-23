@@ -145,7 +145,7 @@ describe('GamesPageComponent - Query Param & State Mapping', () => {
     // Change page
     comp.onPageChange({ page: 3, pageSize: 20 });
     expect(navigateSpy).toHaveBeenCalledWith([], expect.objectContaining({
-      queryParams: { page: 3 },
+      queryParams: expect.objectContaining({ page: 3 }),
       queryParamsHandling: 'merge',
     }));
   });

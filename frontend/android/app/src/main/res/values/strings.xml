@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Gamelock</string>
+    <string name="title_activity_main">Gamelock</string>
+    <string name="package_name">com.gamelock.app</string>
+    <string name="custom_url_scheme">com.gamelock.app</string>
+</resources>

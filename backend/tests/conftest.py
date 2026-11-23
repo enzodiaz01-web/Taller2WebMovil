@@ -57,7 +57,7 @@ settings.igdb_client_secret = ""
 @pytest.fixture(autouse=True)
 def clean_db() -> Generator[None, None, None]:
     with test_engine.connect() as conn:
-        conn.execute(text("TRUNCATE TABLE users, games, genres, game_genres, library_entries, reviews, comments CASCADE;"))
+        conn.execute(text("TRUNCATE TABLE users, games, genres, game_genres, library_entries, reviews, comments, mobile_events CASCADE;"))
         conn.commit()
     yield
 

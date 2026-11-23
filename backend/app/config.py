@@ -9,7 +9,9 @@ class Settings(BaseSettings):
     database_url: str
     jwt_secret: str
     jwt_expire_min: int = 60
-    cors_origins: str = "http://localhost:4200"
+    cors_origins: str = (
+        "http://localhost:4200,http://localhost,https://localhost,capacitor://localhost"
+    )
     igdb_client_id: str = ""
     igdb_client_secret: str = ""
     demo_user_password: str = ""

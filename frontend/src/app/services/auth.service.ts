@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
-import { environment } from '../../environments/environment';
 import { LoginIn, RegisterIn, TokenOut, User } from '../models';
+import { ApiConfigService } from './api-config.service';
 import { AuthStore } from './auth.store';
 
 @Injectable({
@@ -11,7 +11,11 @@ import { AuthStore } from './auth.store';
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly authStore = inject(AuthStore);
-  private readonly baseUrl = environment.apiUrl;
+  private readonly apiConfig = inject(ApiConfigService);
+
+  private get baseUrl(): string {
+    return this.apiConfig.apiUrl();
+  }
 
   register(data: RegisterIn): Observable<User> {
     return this.http.post<User>(`${this.baseUrl}/auth/register`, data);

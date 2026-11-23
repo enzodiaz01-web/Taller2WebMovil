@@ -109,6 +109,9 @@ export interface ReviewOut {
   game_id: number;
   score: number;
   body: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  location_label?: string | null;
   created_at: string;
   updated_at: string;
   author: Author;
@@ -122,6 +125,9 @@ export interface ReviewWithGame extends ReviewOut {
 export interface ReviewIn {
   score: number;
   body: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  location_label?: string | null;
 }
 
 export interface CommentOut {
@@ -154,4 +160,45 @@ export interface Home {
   most_completed: GameCountItem[];
   top_rated: TopRatedGameItem[];
   recent_reviews: ReviewWithGame[];
+}
+
+export interface ScanIn {
+  code: string;
+  format?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+}
+
+export interface ScanOut {
+  event_id: number;
+  kind: 'game' | 'user' | 'review' | 'search' | 'unknown';
+  route: string | null;
+  message: string;
+  game: GameCard | null;
+  username: string | null;
+  review_id: number | null;
+  query: string | null;
+}
+
+export interface ShakePickIn {
+  magnitude: number;
+  source?: 'wishlist' | 'catalog' | 'auto';
+  latitude?: number | null;
+  longitude?: number | null;
+}
+
+export interface ShakePickOut {
+  event_id: number;
+  game: GameCard;
+  from_wishlist: boolean;
+  message: string;
+}
+
+export interface MobileEventOut {
+  id: number;
+  event_type: string;
+  payload: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  created_at: string;
 }

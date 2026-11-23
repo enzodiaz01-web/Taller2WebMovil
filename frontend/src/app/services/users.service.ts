@@ -1,19 +1,19 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { httpResource } from '@angular/common/http';
-import { environment } from '../../environments/environment';
 import { Page, ReviewWithGame, UserLibraryItem, UserPublic } from '../models';
+import { ApiConfigService } from './api-config.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UsersService {
-  private readonly baseUrl = environment.apiUrl;
+  private readonly apiConfig = inject(ApiConfigService);
 
   profile(usernameFn: () => string | null | undefined) {
     return httpResource<UserPublic>(() => {
       const u = usernameFn();
       if (!u) return undefined;
-      return `${this.baseUrl}/users/${encodeURIComponent(u)}`;
+      return `${this.apiConfig.apiUrl()}/users/${encodeURIComponent(u)}`;
     });
   }
 
@@ -37,7 +37,7 @@ export class UsersService {
       searchParams.set('page', String(page));
       searchParams.set('page_size', String(pageSize));
 
-      return `${this.baseUrl}/users/${encodeURIComponent(u)}/library?${searchParams.toString()}`;
+      return `${this.apiConfig.apiUrl()}/users/${encodeURIComponent(u)}/library?${searchParams.toString()}`;
     });
   }
 
@@ -56,7 +56,7 @@ export class UsersService {
       searchParams.set('page', String(page));
       searchParams.set('page_size', String(pageSize));
 
-      return `${this.baseUrl}/users/${encodeURIComponent(u)}/reviews?${searchParams.toString()}`;
+      return `${this.apiConfig.apiUrl()}/users/${encodeURIComponent(u)}/reviews?${searchParams.toString()}`;
     });
   }
 }

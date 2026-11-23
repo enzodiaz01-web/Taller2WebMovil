@@ -44,6 +44,12 @@ import { ScoreBadgeComponent } from '../score-badge.component';
             <mat-icon class="comment-icon">chat_bubble_outline</mat-icon>
             <span>{{ r.comment_count }} {{ r.comment_count === 1 ? 'comment' : 'comments' }}</span>
           </a>
+          @if (r.location_label || (r.latitude != null && r.longitude != null)) {
+            <span class="location-badge" title="Ubicación GPS registrada">
+              <mat-icon class="comment-icon">location_on</mat-icon>
+              <span>{{ r.location_label || (r.latitude + ', ' + r.longitude) }}</span>
+            </span>
+          }
         </div>
       </div>
     }
@@ -142,8 +148,18 @@ import { ScoreBadgeComponent } from '../score-badge.component';
     .card-footer {
       display: flex;
       align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
       padding-top: 4px;
       border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .location-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--accent);
     }
     .comments-link {
       display: inline-flex;

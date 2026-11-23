@@ -116,6 +116,22 @@ import {
 
           <!-- Review Body -->
           <div class="review-body-section">
+            @if (r.location_label || (r.latitude != null && r.longitude != null)) {
+              <div class="review-location-chip">
+                <mat-icon>location_on</mat-icon>
+                <span>{{ r.location_label || (r.latitude + ', ' + r.longitude) }}</span>
+                @if (r.latitude != null && r.longitude != null) {
+                  <a
+                    [href]="'https://www.google.com/maps?q=' + r.latitude + ',' + r.longitude"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="map-link"
+                  >
+                    Ver mapa
+                  </a>
+                }
+              </div>
+            }
             @if (r.body) {
               <p class="review-body-text">{{ r.body }}</p>
             } @else {
@@ -454,6 +470,29 @@ import {
       font-size: 14px;
       line-height: 1.5;
       color: var(--text);
+    }
+    .review-location-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      margin-bottom: 12px;
+      border-radius: 999px;
+      background: rgba(242, 193, 78, 0.1);
+      border: 1px solid rgba(242, 193, 78, 0.3);
+      color: var(--accent);
+      font-size: 13px;
+    }
+    .review-location-chip mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+    .map-link {
+      color: var(--text);
+      text-decoration: underline;
+      margin-left: 6px;
+      font-size: 12px;
     }
   `],
 })

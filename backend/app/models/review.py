@@ -3,10 +3,12 @@ from typing import TYPE_CHECKING
 from sqlalchemy import (
     CheckConstraint,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     Integer,
     SmallInteger,
+    String,
     Text,
     UniqueConstraint,
     func,
@@ -38,6 +40,9 @@ class Review(Base):
     )
     score: Mapped[int] = mapped_column(SmallInteger, nullable=False)
     body: Mapped[str | None] = mapped_column(Text, nullable=True)
+    latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
+    longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
+    location_label: Mapped[str | None] = mapped_column(String(200), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
