@@ -135,9 +135,12 @@ def process_scan(
     # 4. Pure numeric code (e.g. direct game ID, IGDB ID, or EAN/UPC barcode)
     if raw.isdigit():
         num = int(raw)
-        matched_game = db.scalar(
-            select(Game).where((Game.id == num) | (Game.igdb_id == num))
-        )
+        matched_game = None
+        # PostgreSQL integer is signed 32-bit (max 2,147,483,647). Barcodes (UPC/EAN) are larger.
+        if num <= 2_147_483_647:
+            matched_game = db.scalar(
+                select(Game).where((Game.id == num) | (Game.igdb_id == num))
+            )
         event = _record_event(
             db,
             current_user,
