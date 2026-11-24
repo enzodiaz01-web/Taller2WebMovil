@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: gamelock-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt && alembic upgrade head && python -m scripts.seed_full_demo
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gamelock-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: DEMO_USER_PASSWORD
+        value: demo_password_123
+
+databases:
+  - name: gamelock-db
+    databaseName: gamelock
+    user: gamelock
+    plan: free

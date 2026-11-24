@@ -16,6 +16,15 @@ class Settings(BaseSettings):
     igdb_client_secret: str = ""
     demo_user_password: str = ""
 
+    @field_validator("database_url")
+    @classmethod
+    def fix_database_url(cls, v: str) -> str:
+        if v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql+psycopg://", 1)
+        if v.startswith("postgresql://") and "+psycopg" not in v:
+            return v.replace("postgresql://", "postgresql+psycopg://", 1)
+        return v
+
     @field_validator("jwt_secret")
     @classmethod
     def validate_jwt_secret(cls, v: str) -> str:

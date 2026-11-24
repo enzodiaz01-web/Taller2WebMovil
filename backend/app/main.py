@@ -24,16 +24,25 @@ for o in [
     "http://10.0.2.2",
     "http://10.0.2.2:8000",
 ]:
-    if o not in cors_origins:
+    if o not in cors_origins and "*" not in cors_origins:
         cors_origins.append(o)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+if "*" in cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origin_regex=r".*",
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 app.include_router(auth_router, prefix="/api")
 app.include_router(users_router, prefix="/api")
