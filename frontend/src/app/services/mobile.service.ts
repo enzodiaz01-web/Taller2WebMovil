@@ -228,19 +228,41 @@ export class MobileService {
         }
       }
 
-      const SHAKE_THRESHOLD = 16.5; // m/s^2 net linear or total delta
-      const COOLDOWN_MS = 2500;
+      let lastX = 0;
+      let lastY = 0;
+      let lastZ = 0;
+      let hasLast = false;
+      const SHAKE_THRESHOLD = 9.0; // Umbral calibrado y sensible para sacudida natural de mano (m/s^2)
+      const DELTA_THRESHOLD = 10.5; // Cambio brusco de dirección al agitar adelante y atrás
+      const COOLDOWN_MS = 1500; // 1.5s entre recomendaciones para evitar doble activación
 
       this.accelHandle = await Motion.addListener('accel', (event) => {
         const a = event.acceleration ?? event.accelerationIncludingGravity;
         if (!a) return;
-        const mag = Math.sqrt((a.x ?? 0) ** 2 + (a.y ?? 0) ** 2 + (a.z ?? 0) ** 2);
-        // If only accelerationIncludingGravity is available, subtract ~9.8 gravity baseline
+
+        const x = a.x ?? 0;
+        const y = a.y ?? 0;
+        const z = a.z ?? 0;
+
+        const mag = Math.sqrt(x ** 2 + y ** 2 + z ** 2);
+        // Si no viene aceleración lineal neta, restamos la componente estática de gravedad
         const effectiveMag = event.acceleration ? mag : Math.abs(mag - 9.81);
+
+        // Diferencia vectorial entre muestras consecutivas (vaivén típico de sacudir)
+        let delta = 0;
+        if (hasLast) {
+          delta = Math.sqrt((x - lastX) ** 2 + (y - lastY) ** 2 + (z - lastZ) ** 2);
+        }
+        lastX = x;
+        lastY = y;
+        lastZ = z;
+        hasLast = true;
+
         const now = Date.now();
-        if (effectiveMag >= SHAKE_THRESHOLD && now - this.lastShakeTs > COOLDOWN_MS) {
+        if ((effectiveMag >= SHAKE_THRESHOLD || delta >= DELTA_THRESHOLD) && now - this.lastShakeTs > COOLDOWN_MS) {
           this.lastShakeTs = now;
-          onShake(Number(effectiveMag.toFixed(2)));
+          const reportMag = Math.max(effectiveMag, delta);
+          onShake(Number(reportMag.toFixed(2)));
         }
       });
 

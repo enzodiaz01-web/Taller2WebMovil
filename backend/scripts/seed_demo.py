@@ -116,6 +116,17 @@ COMMENT_POOL = [
     "Such a refreshing experience in this genre, totally agree with you.",
 ]
 
+DEMO_LOCATIONS = [
+    (-23.6509, -70.3975, "Antofagasta, Chile"),
+    (-33.4489, -70.6693, "Santiago, Chile"),
+    (-33.0472, -71.6127, "Valparaíso, Chile"),
+    (-29.9533, -71.3436, "La Serena, Chile"),
+    (-36.8201, -73.0444, "Concepción, Chile"),
+    (-20.2167, -70.1444, "Iquique, Chile"),
+    (35.6762, 139.6503, "Tokyo, Japón"),
+    (37.7749, -122.4194, "San Francisco, USA"),
+]
+
 
 def seed_demo_data(
     db: Session,
@@ -279,11 +290,15 @@ def seed_demo_data(
                 if upd_time > now:
                     upd_time = now
 
+                loc = rng.choice(DEMO_LOCATIONS) if rng.random() < 0.65 else None
                 rev = Review(
                     user_id=u.id,
                     game_id=g.id,
                     score=score,
                     body=body,
+                    latitude=loc[0] if loc else None,
+                    longitude=loc[1] if loc else None,
+                    location_label=loc[2] if loc else None,
                     created_at=rev_time,
                     updated_at=upd_time,
                 )

@@ -12,6 +12,7 @@ from app.models.game import Game, Genre
 from app.models.user import User
 from app.models.library import LibraryEntry, LibraryStatus
 from app.services.security import hash_password
+from app.models.review import Review
 from scripts.seed_demo import seed_demo_data
 
 GAMES_DATA = [
@@ -349,6 +350,34 @@ def seed_database():
                 ))
             db.commit()
             print("Populated demo user library entries (wishlist + playing).")
+
+        existing_user_reviews = db.query(Review).filter_by(user_id=demo_user.id).count()
+        if existing_user_reviews == 0 and len(created_games) > 0:
+            db.add(Review(
+                user_id=demo_user.id,
+                game_id=created_games[0].id,
+                score=10,
+                body="Una auténtica obra maestra. La atmósfera, música y jugabilidad son inigualables. Recomendado 100%.",
+                latitude=-23.6509,
+                longitude=-70.3975,
+                location_label="Antofagasta, Chile",
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
+            ))
+            if len(created_games) > 1:
+                db.add(Review(
+                    user_id=demo_user.id,
+                    game_id=created_games[1].id,
+                    score=9,
+                    body="Desafiante pero sumamente gratificante. El diseño del mundo es fascinante.",
+                    latitude=-33.4489,
+                    longitude=-70.6693,
+                    location_label="Santiago, Chile",
+                    created_at=datetime.now(timezone.utc),
+                    updated_at=datetime.now(timezone.utc),
+                ))
+            db.commit()
+            print("Populated demo reviews with GPS location for demo user.")
 
     print("Database seeding completed successfully!")
 

@@ -1,4 +1,4 @@
-import { Component, HostListener, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy, computed, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -17,6 +17,7 @@ import { AuthStore } from './services/auth.store';
 import { AuthService } from './services/auth.service';
 import { MobileService } from './services/mobile.service';
 import { ServerConfigDialogComponent } from './components/server-config-dialog/server-config-dialog.component';
+import { ShakePickDialogComponent } from './components/shake-pick-dialog/shake-pick-dialog.component';
 
 @Component({
   selector: 'app-root',
@@ -35,7 +36,7 @@ import { ServerConfigDialogComponent } from './components/server-config-dialog/s
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
-export class App {
+export class App implements OnInit, OnDestroy {
   readonly siteName = SITE_NAME;
   readonly authStore = inject(AuthStore);
   readonly authService = inject(AuthService);
@@ -44,6 +45,41 @@ export class App {
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
   private readonly breakpointObserver = inject(BreakpointObserver);
+
+  private isShakingModalOpen = false;
+
+  ngOnInit(): void {
+    void this.mobileService.startShakeDetection((magnitude) => {
+      void this.onGlobalShake(magnitude);
+    });
+  }
+
+  ngOnDestroy(): void {
+    void this.mobileService.stopShakeDetection();
+  }
+
+  private async onGlobalShake(magnitude: number): Promise<void> {
+    if (this.isShakingModalOpen) return;
+    this.isShakingModalOpen = true;
+
+    const res = await this.mobileService.pickGameByShake(magnitude, 'auto');
+    if (!res.ok || !res.data) {
+      this.isShakingModalOpen = false;
+      return;
+    }
+
+    const ref = this.dialog.open(ShakePickDialogComponent, {
+      data: res.data,
+      width: '340px',
+    });
+
+    ref.afterClosed().subscribe((action) => {
+      this.isShakingModalOpen = false;
+      if (action === 'retry') {
+        void this.onGlobalShake(magnitude);
+      }
+    });
+  }
 
   readonly isMobile = toSignal(
     this.breakpointObserver

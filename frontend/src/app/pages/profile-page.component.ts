@@ -437,7 +437,7 @@ import { ShakePickDialogComponent } from '../components/shake-pick-dialog/shake-
     }
   `],
 })
-export class ProfilePageComponent implements OnInit, OnDestroy {
+export class ProfilePageComponent {
   readonly username = input<string>();
 
   private readonly usersService = inject(UsersService);
@@ -449,16 +449,6 @@ export class ProfilePageComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
 
   readonly pickingGame = signal(false);
-
-  ngOnInit(): void {
-    void this.mobileService.startShakeDetection((magnitude) => {
-      void this.triggerShakePick(magnitude);
-    });
-  }
-
-  ngOnDestroy(): void {
-    void this.mobileService.stopShakeDetection();
-  }
 
   openProfileQr(): void {
     const u = this.user();
