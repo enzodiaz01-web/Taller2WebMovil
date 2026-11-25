@@ -1,10 +1,37 @@
-# Gamelock - Sitio web de seguimiento de videojuegos
+# Gamelock - Sitio web y Aplicación Móvil de Videojuegos
 
-Aplicación web donde los usuarios llevan un registro de los juegos que juegan. Cada usuario puede marcar un juego como en lista de deseos, jugando, completado o abandonado, escribir una reseña con una puntuación del 1 al 10 y comentar en las reseñas de otros usuarios. La página de inicio muestra listas como los juegos mejor valorados, los más deseados y los más abandonados.
+Aplicación web y móvil Android (desarrollada con **Angular 22** y **Capacitor 8**) donde los usuarios llevan el registro de sus videojuegos, estados de biblioteca, reseñas valoradas del 1 al 10 con **geolocalización GPS**, escaneo de **códigos QR / barras con la cámara**, y recomendación de juegos mediante **sensor de movimiento (acelerómetro)** con respuesta háptica.
 
-Equipo: Rodrigo Cortes - Enzo Dias - Ulices Ramires - Dan Gomez
+**Equipo:** Rodrigo Cortes - Enzo Diaz - Ulices Ramirez - Dan Gomez  
+**Repositorio Git:** [https://github.com/enzodiaz01-web/Taller2WebMovil](https://github.com/enzodiaz01-web/Taller2WebMovil)
 
-## Características
+---
+
+## 📱 Taller 3 – Información de Entrega y Demo Day
+
+### 1. Entregables requeridos
+- **Enlace al repositorio Git:** [https://github.com/enzodiaz01-web/Taller2WebMovil](https://github.com/enzodiaz01-web/Taller2WebMovil)
+- **Instalador APK generado:** Compilado automáticamente mediante integración continua (CI/CD) en GitHub Actions. Descargable en la pestaña [Actions > Android Debug APK Build](https://github.com/enzodiaz01-web/Taller2WebMovil/actions) bajo el artefacto **`gamelock-debug-apk`**.
+- **Backend en la nube (Railway):** El backend FastAPI y la base de datos PostgreSQL se encuentran desplegados en la nube, permitiendo ejecución autónoma desde cualquier dispositivo Android sin requerir equipos locales.
+
+### 2. Credenciales de prueba (Cuentas Demo)
+Para facilitar la evaluación de todas las funciones sin necesidad de registrarse:
+- **Usuario Demo Principal (con biblioteca y reseñas GPS):**
+  - **Correo:** `demo@gamelock.app`
+  - **Contraseña:** `demo_password_123`
+- **Usuarios de prueba adicionales:** `pixelpilot`, `nora_plays`, `retro_kai` (contraseña: `demo_password_123`).
+
+### 3. Guía de verificación de capacidades móviles (Demo Day)
+| Capacidad Móvil | Plugin / Sensor | Dónde y cómo probarlo |
+| :--- | :--- | :--- |
+| **Cámara y Códigos QR / Barras** | `@capacitor/barcode-scanner` | Toca el botón **QR** en la barra superior o en el menú lateral (**☰ > Escanear QR**). Escanea el código QR de cualquier juego o perfil para navegar instantáneamente a su ficha. También puedes generar tu propio QR en `/games/:id` o en tu `/profile`. |
+| **Ubicación y GPS** | `@capacitor/geolocation` | Al escribir o editar una reseña, presiona el botón **"Adjuntar ubicación GPS"** (*Check-in*). El teléfono solicitará permisos y guardará las coordenadas y ciudad en la base de datos, mostrándolas en la tarjeta de la reseña. |
+| **Sensor de Movimiento (Acelerómetro)** | `@capacitor/motion` + `@capacitor/haptics` | En cualquier pantalla de la app, **agita el teléfono** (movimiento natural de muñeca). El acelerómetro detectará la sacudida, emitirá vibración háptica y desplegará un diálogo emergente recomendando aleatoriamente un juego de tu Wishlist o catálogo. También disponible en tu Perfil. |
+| **Selector de Servidor API** | Configuración Dinámica | En el menú lateral (**☰ > Servidor API**), se puede alternar dinámicamente entre la URL de producción en la nube (Railway) o una IP de red local (`http://192.168.x.x:8000/api`), sin necesidad de recompilar el APK. |
+
+---
+
+## Características Generales
 
 - Registro, inicio y cierre de sesión (Autenticación JWT, contraseñas almacenadas con hash).
 - Página de inicio con un carrusel principal y listas: mejor valorados, más deseados, más jugados ahora mismo, más completados, más abandonados y reseñas recientes.
@@ -71,8 +98,8 @@ Necesitas tres cosas ejecutándose al mismo tiempo: la base de datos, el backend
 
 ### 1. Clonar el repositorio
 
-```
-git clone https://github.com/Yuukii-i/Taller2WebMovil.git
+```bash
+git clone https://github.com/enzodiaz01-web/Taller2WebMovil.git
 cd Taller2WebMovil
 ```
 
